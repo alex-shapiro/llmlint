@@ -13,6 +13,16 @@ myfile.md:5:61: is-real “Is real … and / not”
 Found 38 cliches in 1 file.
 ```
 
+## Install
+
+Clone this repo and run
+
+```
+cargo install --path .
+```
+
+Install has succeeded if `which llmlint` shows the path to the installed binary.
+
 ## Usage
 
 ```
