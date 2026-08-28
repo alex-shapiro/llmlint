@@ -26,9 +26,22 @@ async function source(arg) {
 const cut = (html, name) =>
   html.split(`// ==== ${name} start ====`)[1].split(`// ==== ${name} end ====`)[0];
 
-// A Rust raw string. `##` delimiters clear the ASCII double quotes that appear
-// inside a couple of the patterns.
-const raw = s => 'r##"' + s + '"##';
+// The narrowest correct Rust string literal for `s`. Plain quoted strings for
+// ordinary text; raw strings only for the backslash-dense regex sources, with
+// the fewest hashes that still terminate.
+const raw = s => {
+  if (!s.includes('\\')) {
+    const escaped = s
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t');
+    return `"${escaped}"`;
+  }
+  let hashes = '';
+  while (s.includes('"' + hashes)) hashes += '#';
+  return `r${hashes}"${s}"${hashes}`;
+};
 
 // JS regex source -> Rust fancy-regex source. \uXXXX escapes become literal
 // characters (the regex crate spells them \x{...}, but these are all visible
@@ -105,7 +118,7 @@ pub struct Rule {
     pub finder: Finder,
 }
 
-/// Every rule, in upstream declaration order. Order is load-bearing: when two
+/// Every rule, in upstream declaration order. Order is load-bearing: if two
 /// rules match the same span, the earlier one wins (see \`crate::lint\`).
 pub static RULES: &[Rule] = &[
 ${entries}

@@ -15,14 +15,14 @@ fn stdout(out: &Output) -> String {
 
 /// 0 clean, 1 cliches found, 2 error — the clippy and ruff convention.
 #[test]
-fn exit_status_is_zero_when_clean() {
+fn exit_status_is_zero_if_clean() {
     let out = llmlint(&["tests/fixtures/clean.md"]);
     assert_eq!(out.status.code(), Some(0));
     assert!(stdout(&out).contains("All clear"));
 }
 
 #[test]
-fn exit_status_is_one_when_cliches_found() {
+fn exit_status_is_one_if_cliches_found() {
     let out = llmlint(&["tests/fixtures/example.txt"]);
     assert_eq!(out.status.code(), Some(1));
     assert!(stdout(&out).contains("Found 38 cliches in 1 file."));

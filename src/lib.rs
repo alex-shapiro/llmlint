@@ -1,8 +1,8 @@
 //! Detection of LLM cliches in prose.
 //!
-//! A Rust port of Simon Willison's `llm-cliche-highlighter.html`. The rule
-//! table in [`rules`] is generated from that file; [`finders`] ports its
-//! detectors and [`lint`] its overlap resolution.
+//! [`lint::lint`] runs the rules in [`rules::RULES`] over a document and
+//! returns non-overlapping findings, which [`report::report`] renders in
+//! either of two formats.
 
 pub mod finders;
 pub mod lint;

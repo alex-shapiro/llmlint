@@ -1,5 +1,4 @@
-//! Running the rule set over a document, ported from upstream's
-//! `collectMatches`.
+//! Running the rule set over a document.
 
 use std::sync::LazyLock;
 
@@ -30,10 +29,14 @@ pub fn all_rules() -> Vec<bool> {
 /// Finds every cliche in `text`, restricted to the rules flagged in `enabled`,
 /// which is indexed in step with [`RULES`].
 ///
-/// Overlapping matches are resolved exactly as upstream does: sort by start
-/// ascending then by end descending, then walk left to right keeping a match
-/// only when it begins at or after the end of the last one kept. Ties fall to
-/// whichever rule is declared first, so [`RULES`] order is load-bearing.
+/// Findings come back in document order and never overlap. Where two matches
+/// would overlap, the one starting earlier wins; between matches starting
+/// together the longer wins; and between identical spans the rule declared
+/// first in [`RULES`] wins.
+///
+/// # Panics
+///
+/// If `enabled` is shorter than [`RULES`].
 pub fn lint(text: &str, enabled: &[bool]) -> Vec<Finding> {
     let mut raw: Vec<(usize, usize, usize)> = Vec::new();
     for idx in 0..RULES.len() {
@@ -64,13 +67,13 @@ pub fn lint(text: &str, enabled: &[bool]) -> Vec<Finding> {
     findings
 }
 
-/// Byte offsets of the start of each line, for turning a match offset into a
-/// 1-based line and character column.
+/// Maps byte offsets in a document to 1-based line and column positions.
 pub struct LineIndex {
     starts: Vec<usize>,
 }
 
 impl LineIndex {
+    /// Indexes the line starts of `text`.
     pub fn new(text: &str) -> Self {
         let mut starts = vec![0];
         starts.extend(text.match_indices('\n').map(|(i, _)| i + 1));

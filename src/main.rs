@@ -1,8 +1,4 @@
 //! `llmlint` — a command line detector for LLM cliches.
-//!
-//! A Rust port of Simon Willison's `llm-cliche-highlighter.html`. The rule
-//! table in [`rules`] is generated from that file; [`finders`] ports its
-//! detectors and [`lint`] its overlap resolution.
 
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -239,10 +235,7 @@ fn walk(root: &Path, no_ignore_vcs: bool) -> Vec<PathBuf> {
         .collect()
 }
 
-/// Reads a file as text, returning `None` when it is not UTF-8 prose.
-///
-/// A NUL byte in the first 8KiB is taken as proof the file is binary, which is
-/// how ripgrep decides the same question.
+/// Reads a file as text, returning `None` if it is not UTF-8 prose.
 fn read_text(path: &Path) -> io::Result<Option<String>> {
     let bytes = std::fs::read(path)?;
     if bytes.iter().take(8192).any(|&b| b == 0) {

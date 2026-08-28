@@ -23,17 +23,17 @@ Paths may be files or directories. Directories are searched recursively for
 anything that decodes as UTF-8, skipping binaries and paths git ignores. A file
 named explicitly on the command line is always linted, even if git ignores it.
 
-| Option | |
-| --- | --- |
+| Option                            |                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `--output-format <concise\|full>` | `concise` (default) is one line per finding; `full` is a rustc-style block with the source line underlined |
-| `--select <ids>` | Comma-separated rule ids to run, replacing the default set of all rules |
-| `--ignore <ids>` | Comma-separated rule ids to skip |
-| `--no-ignore-vcs` | Lint files that git ignores |
-| `--list-rules` | List every rule and exit |
-| `-q`, `--quiet` | Suppress the summary line |
-| `-V`, `--version` | Print version and exit |
+| `--select <ids>`                  | Comma-separated rule ids to run, replacing the default set of all rules                                    |
+| `--ignore <ids>`                  | Comma-separated rule ids to skip                                                                           |
+| `--no-ignore-vcs`                 | Lint files that git ignores                                                                                |
+| `--list-rules`                    | List every rule and exit                                                                                   |
+| `-q`, `--quiet`                   | Suppress the summary line                                                                                  |
+| `-V`, `--version`                 | Print version and exit                                                                                     |
 
-Exit status is `0` when nothing was found, `1` when cliches were found, and `2`
+Exit status is `0` if nothing was found, `1` if cliches were found, and `2`
 on a usage or I/O error — the same convention clippy and ruff use.
 
 `--output-format full` gives the fuller diagnostic:
@@ -57,7 +57,7 @@ and are tagged as such; the rest are Simon's own.
 
 Every rule is on by default, including `colon-triple`, which flags a colon
 opening onto three or more comma-separated items. Upstream notes it is noisy on
-technical writing — `--ignore colon-triple` when linting documentation.
+technical writing — `--ignore colon-triple` if linting documentation.
 
 ## How the port works
 

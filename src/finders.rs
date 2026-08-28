@@ -1,15 +1,8 @@
-//! Detectors, ported from the `make*Finder` factories in upstream's
-//! `llm-cliche-highlighter.html`.
+//! Cliche detectors and the spans they find.
 //!
-//! Every finder returns byte-offset spans into the haystack. Upstream works in
-//! UTF-16 code units and this works in UTF-8 bytes; the offsets differ for
-//! non-ASCII text but are used only for slicing and ordering, so the resulting
-//! spans cover the same characters.
-//!
-//! One deliberate deviation: `\w` and `\b` are Unicode-aware here, where
-//! JavaScript's non-`u`-flag regexes treat them as ASCII. On ASCII prose the
-//! behaviour is identical; on accented words Rust's reading is the better one
-//! ("café" is one word rather than "caf" plus a stray letter).
+//! Each [`Rule`](crate::rules::Rule) carries a [`Finder`] describing how its
+//! cliche is detected. [`Finder::compile`] turns that into a [`Detector`],
+//! which reports matches as byte-offset [`Span`]s.
 
 use std::collections::HashSet;
 use std::sync::LazyLock;
@@ -23,9 +16,8 @@ pub struct Span {
     pub end: usize,
 }
 
-/// How a [`Rule`](crate::rules::Rule) locates its cliche. This is the static
-/// description baked into the rule table; [`Finder::compile`] turns it into a
-/// [`Detector`] that runs.
+/// How a rule locates its cliche: the static description stored in the rule
+/// table, before any regex has been compiled.
 pub enum Finder {
     /// A plain regex; every match is a hit.
     Regex(&'static str),
@@ -49,7 +41,12 @@ pub enum Detector {
 }
 
 impl Finder {
-    /// Compiles this finder's regexes.
+    /// Compiles this finder's regexes into a runnable [`Detector`].
+    ///
+    /// # Panics
+    ///
+    /// If a pattern is malformed. Patterns are generated and compiled into the
+    /// binary, so this is a build-time bug rather than a runtime condition.
     pub fn compile(&self) -> Detector {
         let build = |source: &str| {
             Regex::new(source).unwrap_or_else(|e| panic!("invalid rule regex {source:?}: {e}"))
@@ -68,6 +65,7 @@ impl Finder {
 }
 
 impl Detector {
+    /// Every span of `text` this detector matches, in document order.
     pub fn find(&self, text: &str) -> Vec<Span> {
         match self {
             Detector::Regex(re) => find_regex(re, text),
@@ -90,7 +88,7 @@ fn find_regex(re: &Regex, text: &str) -> Vec<Span> {
 }
 
 /// The offset `end` walked back over any trailing whitespace, floored at
-/// `floor`. Mirrors upstream's `while (/\s/.test(text[end - 1])) end -= 1`.
+/// `floor`.
 fn trim_end_ws(text: &str, end: usize, floor: usize) -> usize {
     floor + text[floor..end].trim_end().len()
 }
