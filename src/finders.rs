@@ -1,37 +1,36 @@
-//! Cliche detectors and the spans they find.
+//! Cliché detectors and matching text spans.
 //!
-//! Each [`Rule`](crate::rules::Rule) carries a [`Finder`] describing how its
-//! cliche is detected. [`Finder::compile`] turns that into a [`Detector`],
-//! which reports matches as byte-offset [`Span`]s.
+//! Each [`Rule`](crate::rules::Rule) contains a [`Finder`] describing how its
+//! cliché is detected. [`Finder::compile`] converts this into a compiled [`Detector`],
+//! which returns matches as byte-offset [`Span`]s.
 
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use fancy_regex::Regex;
 
-/// A single detected span, as byte offsets into the text it was found in.
+/// A single detected match, represented as byte offsets within the source text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
 }
 
-/// How a rule locates its cliche: the static description stored in the rule
-/// table, before any regex has been compiled.
+/// Static definition of how a rule matches clichés, prior to regex compilation.
 pub enum Finder {
-    /// A plain regex; every match is a hit.
+    /// A standard regular expression pattern.
     Regex(&'static str),
-    /// A "HEAD x, HEAD y, ..." list, where the head is this regex fragment.
+    /// A list matching patterns of the form "HEAD x, HEAD y, ...", where `head` is the prefix regex.
     Chain(&'static str),
-    /// Runs of adjacent sentences sharing an n-gram skeleton.
+    /// Adjacent sentences sharing repeated n-gram structures.
     Echo { min_gram: usize, min_run: usize },
-    /// Runs of consecutive question sentences.
+    /// Runs of consecutive questions.
     QuestionChain { min_run: usize },
-    /// Runs of consecutive sentences opening on the same word.
+    /// Consecutive sentences starting with the same word.
     Anaphora { min_run: usize },
 }
 
-/// A finder with its regexes compiled.
+/// A compiled finder ready for pattern matching.
 pub enum Detector {
     Regex(Regex),
     Chain(Regex),
@@ -41,12 +40,7 @@ pub enum Detector {
 }
 
 impl Finder {
-    /// Compiles this finder's regexes into a runnable [`Detector`].
-    ///
-    /// # Panics
-    ///
-    /// If a pattern is malformed. Patterns are generated and compiled into the
-    /// binary, so this is a build-time bug rather than a runtime condition.
+    /// Compiles this finder's regexes into an executable [`Detector`].
     pub fn compile(&self) -> Detector {
         let build = |source: &str| {
             Regex::new(source).unwrap_or_else(|e| panic!("invalid rule regex {source:?}: {e}"))
@@ -65,7 +59,7 @@ impl Finder {
 }
 
 impl Detector {
-    /// Every span of `text` this detector matches, in document order.
+    /// Returns all spans matching this detector in `text`, in document order.
     pub fn find(&self, text: &str) -> Vec<Span> {
         match self {
             Detector::Regex(re) => find_regex(re, text),
@@ -87,13 +81,12 @@ fn find_regex(re: &Regex, text: &str) -> Vec<Span> {
         .collect()
 }
 
-/// The offset `end` walked back over any trailing whitespace, floored at
-/// `floor`.
+/// Trims trailing whitespace from `text[floor..end]`, returning the adjusted end offset (at least `floor`).
 fn trim_end_ws(text: &str, end: usize, floor: usize) -> usize {
     floor + text[floor..end].trim_end().len()
 }
 
-/// The mirror of [`trim_end_ws`], advancing `start` past leading whitespace.
+/// Trims leading whitespace from `text[start..ceil]`, returning the adjusted start offset (at most `ceil`).
 fn trim_start_ws(text: &str, start: usize, ceil: usize) -> usize {
     ceil - text[start..ceil].trim_start().len()
 }
@@ -124,7 +117,7 @@ struct Sentence {
 static ECHO_SENT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^.!?\n]+[.!?]?").unwrap());
 static GRAM_WORD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[a-z0-9'’-]+").unwrap());
 
-/// The set of `n`-word shingles in a sentence, lowercased.
+/// Returns the set of lowercased `n`-word n-grams (shingles) in a sentence.
 fn grams(s: &str, n: usize) -> HashSet<String> {
     let lower = s.to_lowercase();
     let words: Vec<&str> = GRAM_WORD
@@ -202,7 +195,7 @@ fn find_question_chain(text: &str, min_run: usize) -> Vec<Span> {
 static ANAPHORA_SENT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^.!?\n]+[.!?]").unwrap());
 static ANAPHORA_HEAD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Za-z'’-]+").unwrap());
 
-/// Pronouns and articles whose repetition is ordinary prose.
+/// Common pronouns, articles, and short words whose repetition is natural in prose.
 static ANAPHORA_SKIP: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"(?i)^(?:i|it|the|a|an|this|that|we|you|they|he|she|there|but|and|so|in|as|if|my|his|her|their|its|these|those|for|at|on|of|to|is|was)$",

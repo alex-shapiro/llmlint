@@ -6,8 +6,8 @@
 
 use crate::finders::Finder;
 
-/// One cliche pattern: a stable id, a human-readable name used as the
-/// diagnostic message, and the detector that finds it.
+/// A single cliché detection rule with a stable ID, a human-readable name
+/// used in diagnostic output, and its corresponding pattern detector.
 pub struct Rule {
     pub id: &'static str,
     pub name: &'static str,
@@ -16,8 +16,8 @@ pub struct Rule {
     pub finder: Finder,
 }
 
-/// Every rule, in upstream declaration order. Order is load-bearing: if two
-/// rules match the same span, the earlier one wins (see `crate::lint`).
+/// All rules in upstream declaration order. Rule order determines precedence:
+/// if two rules match overlapping spans, the earlier rule takes precedence (see `crate::lint`).
 pub static RULES: &[Rule] = &[
     Rule {
         id: "no-chain",

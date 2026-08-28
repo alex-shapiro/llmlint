@@ -1,6 +1,6 @@
 # LLM Lint
 
-Command line tool for detecting LLM cliches. Ported directly from [Simon Willison's web tool](https://github.com/simonw/tools/blob/main/llm-cliche-highlighter.html).
+A command-line tool for detecting LLM clichés. Ported from [Simon Willison's web tool](https://github.com/simonw/tools/blob/main/llm-cliche-highlighter.html).
 
 ```
 $ llmlint myfile.md
@@ -19,24 +19,21 @@ Found 38 cliches in 1 file.
 llmlint [OPTIONS] <paths...>
 ```
 
-Paths may be files or directories. Directories are searched recursively for
-anything that decodes as UTF-8, skipping binaries and paths git ignores. A file
-named explicitly on the command line is always linted, even if git ignores it.
+Paths may be files or directories. Directories are searched recursively for valid UTF-8 text files, skipping binaries and paths ignored by git. A file passed explicitly is linted even if gitignored.
 
-| Option                            |                                                                                                            |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `--output-format <concise\|full>` | `concise` (default) is one line per finding; `full` is a rustc-style block with the source line underlined |
-| `--select <ids>`                  | Comma-separated rule ids to run, replacing the default set of all rules                                    |
-| `--ignore <ids>`                  | Comma-separated rule ids to skip                                                                           |
-| `--no-ignore-vcs`                 | Lint files that git ignores                                                                                |
-| `--list-rules`                    | List every rule and exit                                                                                   |
-| `-q`, `--quiet`                   | Suppress the summary line                                                                                  |
-| `-V`, `--version`                 | Print version and exit                                                                                     |
+| Option                            |                                                                                                                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `--output-format <concise\|full>` | `concise` (default) prints one line per finding; `full` displays a rustc-style block with the source line underlined |
+| `--select <ids>`                  | Comma-separated rule IDs to run, replacing the default set of all rules                                              |
+| `--ignore <ids>`                  | Comma-separated rule IDs to skip                                                                                     |
+| `--no-ignore-vcs`                 | Lint files ignored by git                                                                                            |
+| `--list-rules`                    | List all rules and exit                                                                                              |
+| `-q`, `--quiet`                   | Suppress the summary line                                                                                            |
+| `-V`, `--version`                 | Print version and exit                                                                                               |
 
-Exit status is `0` if nothing was found, `1` if cliches were found, and `2`
-on a usage or I/O error — the same convention clippy and ruff use.
+The exit code is `0` if no clichés were found, `1` if clichés were found, and `2` on a usage or I/O error — following the same convention used by clippy and ruff.
 
-`--output-format full` gives the fuller diagnostic:
+`--output-format full` displays detailed diagnostics:
 
 ```
 warning: “No X, no Y” chains
@@ -50,44 +47,6 @@ warning: “No X, no Y” chains
 
 ## Rules
 
-38 rules, named with the ids upstream already uses — kebab-case, which is also
-how ruff names its rules. `--list-rules` prints them all. Eleven are adapted
-from Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
-and are tagged as such; the rest are Simon's own.
+There are 38 rules, named using the kebab-case IDs from upstream (the same naming convention used by tools like ruff). Run `--list-rules` to display all of them. Eleven are adapted from Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) and are tagged accordingly; the rest were created by Simon Willison.
 
-Every rule is on by default, including `colon-triple`, which flags a colon
-opening onto three or more comma-separated items. Upstream notes it is noisy on
-technical writing — `--ignore colon-triple` if linting documentation.
-
-## How the port works
-
-`src/rules.rs`, `tests/generated/cases.rs` and `tests/fixtures/example.txt` are
-generated from the upstream HTML, so the regexes are upstream's own rather than
-retyped:
-
-```
-node tools/generate.js [path-or-url]   # defaults to fetching from simonw/tools
-cargo fmt
-```
-
-Everything else is hand-written. `src/finders.rs` ports the `make*Finder`
-detector factories and `src/lint.rs` ports `collectMatches`, including its
-overlap resolution — where two rules match overlapping spans, the one declared
-first wins, so the order of `RULES` is load-bearing.
-
-Upstream ships 192 self-tests: 182 per-pattern cases plus 10 others. All 182
-are ported in `tests/upstream.rs`, along with upstream's "example text trips
-every pattern exactly once" integration test. The nine left behind cover the
-GUI: sentence bounds, excerpt windows, tooltip text and the URL-fragment
-loader.
-
-Two deliberate deviations from upstream:
-
-- **No match counts.** The web tool puts a badge on chain, echo, question and
-  anaphora matches counting the items in the run. A linter has nowhere to show
-  one, so the counts are dropped. Upstream's pattern cases assert those counts
-  alongside the match count; the ported cases keep the match counts only.
-- **Unicode `\w` and `\b`.** JavaScript regexes without the `u` flag treat these
-  as ASCII. On ASCII prose the behaviour is identical, and on accented words the
-  Rust reading is the better one — "café" is one word, not "caf" plus a stray
-  letter.
+All rules are enabled by default, including `colon-triple`, which flags a colon opening onto three or more comma-separated items. Upstream notes that this rule can produce false positives in technical writing; use `--ignore colon-triple` when linting documentation.

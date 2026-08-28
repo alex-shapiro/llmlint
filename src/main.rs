@@ -1,4 +1,4 @@
-//! `llmlint` — a command line detector for LLM cliches.
+//! `llmlint` — a command-line detector for LLM clichés.
 
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -11,10 +11,10 @@ use llmlint::lint;
 use llmlint::report::{self, OutputFormat, parse_format};
 use llmlint::rules::RULES;
 
-/// Detect LLM cliches in text files.
+/// Detect LLM clichés in text files.
 ///
 /// Paths may be files or directories; directories are searched recursively,
-/// skipping binary files and anything git ignores.
+/// skipping binary files and anything ignored by git.
 #[derive(FromArgs)]
 struct Args {
     /// files or directories to lint
@@ -30,19 +30,19 @@ struct Args {
     )]
     output_format: OutputFormat,
 
-    /// comma-separated rule ids to run, replacing the default set of all rules
+    /// comma-separated rule IDs to run, replacing the default set of all rules
     #[argh(option)]
     select: Option<String>,
 
-    /// comma-separated rule ids to skip
+    /// comma-separated rule IDs to skip
     #[argh(option)]
     ignore: Option<String>,
 
-    /// lint files that git ignores
+    /// lint files ignored by git
     #[argh(switch, long = "no-ignore-vcs")]
     no_ignore_vcs: bool,
 
-    /// list every rule and exit
+    /// list all rules and exit
     #[argh(switch, long = "list-rules")]
     list_rules: bool,
 
@@ -163,7 +163,7 @@ fn run(args: &Args) -> io::Result<ExitCode> {
     })
 }
 
-/// Lints one document and prints its findings, returning how many there were.
+/// Lints a single document, writes its findings to `out`, and returns the finding count.
 fn check(
     out: &mut impl Write,
     path: &Path,
@@ -176,7 +176,7 @@ fn check(
     Ok(findings.len())
 }
 
-/// Resolves `--select` and `--ignore` into a per-rule enabled flag.
+/// Resolves `--select` and `--ignore` arguments into a boolean mask for each rule.
 fn select_rules(args: &Args) -> Result<Vec<bool>, String> {
     let known = |id: &str| RULES.iter().any(|r| r.id == id);
     let split = |list: &str| -> Result<Vec<String>, String> {
@@ -221,7 +221,7 @@ fn list_rules(out: &mut impl Write) -> io::Result<()> {
     Ok(())
 }
 
-/// Files under `root`, in a stable order, honouring ignore files.
+/// Recursively collects files under `root` in sorted order, respecting ignore files.
 fn walk(root: &Path, no_ignore_vcs: bool) -> Vec<PathBuf> {
     WalkBuilder::new(root)
         .git_ignore(!no_ignore_vcs)
@@ -235,7 +235,7 @@ fn walk(root: &Path, no_ignore_vcs: bool) -> Vec<PathBuf> {
         .collect()
 }
 
-/// Reads a file as text, returning `None` if it is not UTF-8 prose.
+/// Reads a file as text, returning `None` if it is binary or invalid UTF-8.
 fn read_text(path: &Path) -> io::Result<Option<String>> {
     let bytes = std::fs::read(path)?;
     if bytes.iter().take(8192).any(|&b| b == 0) {

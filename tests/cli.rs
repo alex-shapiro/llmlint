@@ -1,4 +1,4 @@
-//! End-to-end tests for the binary
+//! End-to-end integration tests for the CLI binary.
 
 use std::process::{Command, Output};
 

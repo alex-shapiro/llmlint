@@ -1,4 +1,4 @@
-//! Rendering findings for the terminal.
+//! Formats and prints findings for the terminal.
 
 use std::io::{self, Write};
 use std::path::Path;
@@ -7,13 +7,13 @@ use crate::lint::{Finding, LineIndex};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
-    /// One line per finding
+    /// One line per finding.
     Concise,
-    /// A block with the source line and the span underlined.
+    /// Diagnostic block with the source line and underlined match.
     Full,
 }
 
-/// Parses an `--output-format` argument.
+/// Parses an `--output-format` command-line argument value.
 pub fn parse_format(value: &str) -> Result<OutputFormat, String> {
     match value {
         "concise" => Ok(OutputFormat::Concise),
@@ -24,7 +24,7 @@ pub fn parse_format(value: &str) -> Result<OutputFormat, String> {
     }
 }
 
-/// Writes `findings` against `path` to `out` in the requested format.
+/// Writes formatted `findings` for `path` to `out`.
 pub fn report(
     out: &mut impl Write,
     path: &Path,

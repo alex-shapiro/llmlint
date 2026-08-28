@@ -1,12 +1,12 @@
-//! The upstream self-test suite, ported.
+//! Port of the upstream self-test suite.
 //!
-//! `llm-cliche-highlighter.html` carries 192 self-tests, runnable with the
-//! `node -e ...` one-liner printed on the page. The 182 pattern cases below are
-//! generated from its `patternCases` table, and the example-text test is its
-//! "example text trips every pattern exactly once".
+//! `llm-cliche-highlighter.html` includes 192 self-tests, runnable via the
+//! `node -e ...` command shown on the page. The 182 pattern cases below are
+//! generated from its `patternCases` table, and the example text test verifies
+//! that the sample document triggers every pattern exactly once.
 //!
-//! The tests that did not come across cover the GUI: sentence bounds, excerpt
-//! windows, tooltip text and the URL-fragment loader, none of which a linter has.
+//! GUI-specific tests (sentence boundaries, excerpt windows, tooltip text,
+//! and URL-fragment loading) are omitted because they do not apply to a CLI linter.
 
 use llmlint::lint::{all_rules, lint};
 use llmlint::rules::RULES;
@@ -17,7 +17,7 @@ fn rule(id: &str) -> &'static llmlint::rules::Rule {
     RULES
         .iter()
         .find(|r| r.id == id)
-        .unwrap_or_else(|| panic!("no rule `{id}`"))
+        .unwrap_or_else(|| panic!("unknown rule `{id}`"))
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn rule_ids_are_unique() {
     ids.sort_unstable();
     let count = ids.len();
     ids.dedup();
-    assert_eq!(ids.len(), count, "duplicate rule id");
+    assert_eq!(ids.len(), count, "duplicate rule ID found");
 }
 
 #[test]
@@ -62,12 +62,16 @@ fn example_text_trips_every_pattern_once() {
     let text = include_str!("fixtures/example.txt");
     let findings = lint(text, &all_rules());
 
-    assert_eq!(findings.len(), RULES.len(), "one match per rule");
+    assert_eq!(findings.len(), RULES.len(), "expected one match per rule");
 
     let mut ids: Vec<&str> = findings.iter().map(|f| f.rule.id).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), RULES.len(), "every rule distinct");
+    assert_eq!(
+        ids.len(),
+        RULES.len(),
+        "expected every matching rule to be distinct"
+    );
 }
 
 #[test]

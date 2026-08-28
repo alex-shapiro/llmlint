@@ -5,38 +5,40 @@ use std::sync::LazyLock;
 use crate::finders::Detector;
 use crate::rules::{RULES, Rule};
 
-/// Every rule's detector, compiled once, indexed in step with [`RULES`].
+/// Compiled detectors for all rules, indexed correspondingly with [`RULES`].
 static DETECTORS: LazyLock<Vec<Detector>> =
     LazyLock::new(|| RULES.iter().map(|r| r.finder.compile()).collect());
 
-/// One reported cliche.
+/// A single detected cliché finding.
 pub struct Finding {
     pub rule: &'static Rule,
-    /// 1-based line of the span's first character.
+    /// 1-based line number of the start of the match.
     pub line: usize,
-    /// 1-based column, counted in characters.
+    /// 1-based character column number of the start of the match.
     pub column: usize,
-    /// Byte range of the match within the document.
+    /// Starting byte offset of the match within the document.
     pub start: usize,
+    /// Ending byte offset of the match within the document.
     pub end: usize,
 }
 
-/// Every rule enabled, for callers that want the default set.
+/// Returns a boolean mask with all rules enabled.
 pub fn all_rules() -> Vec<bool> {
     vec![true; RULES.len()]
 }
 
-/// Finds every cliche in `text`, restricted to the rules flagged in `enabled`,
-/// which is indexed in step with [`RULES`].
+/// Finds all clichés in `text` matching the rules enabled in `enabled`,
+/// which is indexed in the same order as [`RULES`].
 ///
-/// Findings come back in document order and never overlap. Where two matches
-/// would overlap, the one starting earlier wins; between matches starting
-/// together the longer wins; and between identical spans the rule declared
-/// first in [`RULES`] wins.
+/// Findings are returned in document order without overlapping spans.
+/// Overlap conflicts are resolved by prioritizing:
+/// 1. Earlier start position
+/// 2. Longer match length
+/// 3. Rule declared earlier in [`RULES`]
 ///
 /// # Panics
 ///
-/// If `enabled` is shorter than [`RULES`].
+/// Panics if `enabled.len() < RULES.len()`.
 pub fn lint(text: &str, enabled: &[bool]) -> Vec<Finding> {
     let mut raw: Vec<(usize, usize, usize)> = Vec::new();
     for idx in 0..RULES.len() {
@@ -80,14 +82,14 @@ impl LineIndex {
         Self { starts }
     }
 
-    /// The 1-based line and character column containing byte offset `offset`.
+    /// Returns the 1-based line and character column corresponding to byte offset `offset`.
     pub fn locate(&self, text: &str, offset: usize) -> (usize, usize) {
         let line = self.starts.partition_point(|&s| s <= offset) - 1;
         let column = text[self.starts[line]..offset].chars().count() + 1;
         (line + 1, column)
     }
 
-    /// The text of the 1-based `line`, without its trailing newline.
+    /// Returns the text of the given 1-based `line`, without its trailing newline.
     pub fn line_text<'t>(&self, text: &'t str, line: usize) -> &'t str {
         let start = self.starts[line - 1];
         let end = self.starts.get(line).map_or(text.len(), |&s| s - 1);
