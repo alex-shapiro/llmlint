@@ -2,6 +2,7 @@
 name = "llmlint"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
 
 [dependencies]
 argh = "0.1.19"

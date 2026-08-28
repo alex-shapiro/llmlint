@@ -50,3 +50,7 @@ warning: “No X, no Y” chains
 There are 38 rules, named using the kebab-case IDs from upstream (the same naming convention used by tools like ruff). Run `--list-rules` to display all of them. Eleven are adapted from Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) and are tagged accordingly; the rest were created by Simon Willison.
 
 All rules are enabled by default, including `colon-triple`, which flags a colon opening onto three or more comma-separated items. Upstream notes that this rule can produce false positives in technical writing; use `--ignore colon-triple` when linting documentation.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
