@@ -1,4 +1,4 @@
-//! End-to-end tests for the binary: exit status and output shape.
+//! End-to-end tests for the binary
 
 use std::process::{Command, Output};
 
@@ -13,7 +13,6 @@ fn stdout(out: &Output) -> String {
     String::from_utf8_lossy(&out.stdout).into_owned()
 }
 
-/// 0 clean, 1 cliches found, 2 error — the clippy and ruff convention.
 #[test]
 fn exit_status_is_zero_if_clean() {
     let out = llmlint(&["tests/fixtures/clean.md"]);

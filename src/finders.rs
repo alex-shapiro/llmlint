@@ -102,8 +102,6 @@ fn word_count(s: &str) -> usize {
     s.split_whitespace().count()
 }
 
-// --------------------------------------------------------------------- chains
-
 const CHAIN_BODY: &str = r"[^,.;:!?\n–—…]*";
 const CHAIN_SEP: &str =
     r"(?:\s*,\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+|\s*[;&–—]\s*(?:and\s+|or\s+)?|\s+-{1,2}\s+)";
@@ -117,8 +115,6 @@ fn find_chain(re: &Regex, text: &str) -> Vec<Span> {
         })
         .collect()
 }
-
-// ---------------------------------------------------------------------- echo
 
 struct Sentence {
     start: usize,

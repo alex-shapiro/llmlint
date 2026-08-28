@@ -1,14 +1,5 @@
 #!/usr/bin/env node
 // Regenerates the rule table and the ported test suite from upstream.
-//
-//   node tools/generate.js [path-or-url-to/llm-cliche-highlighter.html]
-//
-// Defaults to fetching the current version from simonw/tools. Writes:
-//   src/rules.rs             the rule table
-//   tests/generated/cases.rs upstream's `patternCases`
-//   tests/fixtures/example.txt  upstream's EXAMPLE text
-//
-// Everything else in the port is hand-written; only these three are generated.
 
 const fs = require('fs');
 const path = require('path');
@@ -26,9 +17,6 @@ async function source(arg) {
 const cut = (html, name) =>
   html.split(`// ==== ${name} start ====`)[1].split(`// ==== ${name} end ====`)[0];
 
-// The narrowest correct Rust string literal for `s`. Plain quoted strings for
-// ordinary text; raw strings only for the backslash-dense regex sources, with
-// the fewest hashes that still terminate.
 const raw = s => {
   if (!s.includes('\\')) {
     const escaped = s
@@ -43,16 +31,13 @@ const raw = s => {
   return `r${hashes}"${s}"${hashes}`;
 };
 
-// JS regex source -> Rust fancy-regex source. \uXXXX escapes become literal
-// characters (the regex crate spells them \x{...}, but these are all visible
-// punctuation and read better as themselves), and an /i flag becomes (?i).
 const convert = (source, flags) =>
   (flags && flags.includes('i') ? '(?i)' : '') +
   source
     .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/\\\//g, '/');
 
-// The GUI showed per-match counts on a badge; the CLI has no such thing.
+
 const describe = d => d.replace(/\s*The badge counts[^.]*\.\s*$/, '').trim();
 
 function extractPatterns(impl) {

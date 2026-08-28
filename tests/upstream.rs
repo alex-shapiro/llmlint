@@ -36,8 +36,6 @@ fn rule_ids_are_unique() {
     assert_eq!(ids.len(), count, "duplicate rule id");
 }
 
-/// Upstream calls `patternsById[id].find(sample)` directly, so these exercise a
-/// single detector with no cross-rule overlap resolution.
 #[test]
 fn upstream_pattern_cases() {
     let mut failures = Vec::new();
@@ -59,7 +57,6 @@ fn upstream_pattern_cases() {
     );
 }
 
-/// Upstream: "example text trips every pattern exactly once".
 #[test]
 fn example_text_trips_every_pattern_once() {
     let text = include_str!("fixtures/example.txt");
@@ -73,8 +70,6 @@ fn example_text_trips_every_pattern_once() {
     assert_eq!(ids.len(), RULES.len(), "every rule distinct");
 }
 
-/// Overlapping matches collapse to the first-declared, longest-reaching rule,
-/// and positions are reported 1-based.
 #[test]
 fn positions_are_one_based() {
     let text = "Intro line.\nNo fluff, no filler.\n";
@@ -88,8 +83,6 @@ fn positions_are_one_based() {
     );
 }
 
-/// Columns count characters, not bytes, so a match after an em dash lands where
-/// a reader would point.
 #[test]
 fn columns_count_characters() {
     let text = "A — B. That's the whole point.";
@@ -101,7 +94,6 @@ fn columns_count_characters() {
     );
 }
 
-/// Guards against the generated table silently emptying out.
 #[test]
 fn suite_is_fully_populated() {
     assert_eq!(PATTERN_CASES.len(), 182, "upstream pattern cases");
